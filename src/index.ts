@@ -162,7 +162,7 @@ app.get('/fetch-data', async (req, res) => {
         AND last_activity_at < CURRENT_DATE + INTERVAL '1 day'
         AND last_activity_at >= NOW() - INTERVAL '10 hours'
         GROUP BY TO_CHAR(last_activity_at, 'HH24')
-        ORDER BY hour DESC`, [accountId]);
+        ORDER BY hour ASC`, [accountId]);
     
 
     // Estrutura os resultados
