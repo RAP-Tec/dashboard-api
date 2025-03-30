@@ -24,8 +24,8 @@ app.get('/fetch-data', async (req, res) => {
     await client.connect();
 
     // Executa dois SELECTs
-    const result1 = await client.query('SELECT * FROM accounts LIMIT 5');
-    const result2 = await client.query('SELECT * FROM users LIMIT 5');
+    const result1 = await client.query('SELECT * FROM tags');
+    const result2 = await client.query('SELECT * FROM users');
 
     // Estrutura os resultados
     const data = {
