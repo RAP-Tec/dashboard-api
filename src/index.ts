@@ -183,7 +183,20 @@ app.get('/fetch-data', async (req, res) => {
         WHERE account_id = $1
         AND last_activity_at >= CURRENT_DATE
         AND last_activity_at < CURRENT_DATE + INTERVAL '1 day'`, [accountId]);
-              
+
+    // TOTAL DE conversations DE HOJE AGRUPADO POR team_id
+    const result12 = await client.query(`SELECT 
+          COALESCE(c.team_id, 0) AS team_id,  -- Retorna 0 se team_id for nulo
+            t.name AS team_name,
+            COUNT(DISTINCT c.team_id) AS total_distinct_teams_today
+        FROM conversations c
+        LEFT JOIN teams t ON c.team_id = t.id
+        WHERE c.account_id = $1
+        AND c.last_activity_at >= CURRENT_DATE
+        AND c.last_activity_at < CURRENT_DATE + INTERVAL '1 day'
+        GROUP BY COALESCE(c.team_id, 0), t.name
+        ORDER BY total_distinct_teams_today DESC`, [accountId]);
+            
 
     // Estrutura os resultados
     const data = {
@@ -198,7 +211,9 @@ app.get('/fetch-data', async (req, res) => {
       tabela9: result9.rows,
       tabela10: result10.rows,
       tabela11: result11.rows,
+      tabela12: result12.rows,
     };
+
 
     // Retorna os dados na resposta HTTP
     res.json(data);
