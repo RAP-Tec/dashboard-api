@@ -11,15 +11,18 @@ const port = 3000;
 app.use(cors());
 
 // Configuração do banco de dados
-const client = new Client({
+const dbConfig = {
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
   password: process.env.DB_PASS,
   port: Number(process.env.DB_PORT),
-});
+};
 
 app.get('/fetch-data', async (req, res) => {
+  // Criar um novo cliente para cada requisição
+  const client = new Client(dbConfig);
+  
   try {
     await client.connect();
 
@@ -108,6 +111,7 @@ app.get('/fetch-data', async (req, res) => {
     console.error('Erro ao buscar dados:', error);
     res.status(500).json({ error: 'Erro ao buscar dados' });
   } finally {
+    // Fecha a conexão do cliente atual
     await client.end();
   }
 });
