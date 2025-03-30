@@ -78,7 +78,7 @@ app.get('/fetch-data', async (req, res) => {
         FROM conversations
         WHERE account_id = $1`, [accountId]);
 
-    // TOTAL DE conversations E conversations DO MÊS ANTERIOR
+    // TOTAL DE conversations E conversations DO DIA ANTERIOR
     const result5 = await client.query(`SELECT 
           COUNT(*) AS total_today_conversations,
             (SELECT COUNT(*) 
@@ -102,7 +102,7 @@ app.get('/fetch-data', async (req, res) => {
         FROM messages
         WHERE account_id = $1`, [accountId]);
 
-    // TOTAL DE messages E messages DO MÊS ANTERIOR
+    // TOTAL DE conversations DE HOJE E conversations DE HOJE COM STATUS 1
     const result7 = await client.query(`SELECT 
           COUNT(*) AS total_today_conversations,
             (SELECT COUNT(*) 
@@ -126,7 +126,7 @@ app.get('/fetch-data', async (req, res) => {
         AND last_activity_at >= CURRENT_DATE
         AND last_activity_at < CURRENT_DATE + INTERVAL '1 day'`, [accountId]);
 
-    // TOTAL DE messages E messages DO MÊS ANTERIOR
+    // TOTAL DE conversations E conversations POR STATUS DE HOJE
     const result8 = await client.query(`SELECT 
           status,
             CASE 
@@ -152,7 +152,7 @@ app.get('/fetch-data', async (req, res) => {
         GROUP BY status
         ORDER BY status`, [accountId]);
 
-    // TOTAL DE messages E messages DO MÊS ANTERIOR
+    // TOTAL DE conversations E conversations POR HORA DE HOJE
     const result9 = await client.query(`SELECT 
           TO_CHAR(last_activity_at, 'HH24') AS hour,
             COUNT(*) AS total_conversations
@@ -164,6 +164,26 @@ app.get('/fetch-data', async (req, res) => {
         GROUP BY TO_CHAR(last_activity_at, 'HH24')
         ORDER BY hour ASC`, [accountId]);
     
+    // TOTAL DE conversations DE HOJE E TOTAL DE conversations DA ULTIMA HORA
+    const result10 = await client.query(`SELECT 
+      (SELECT COUNT(*)
+         FROM conversations
+         WHERE account_id = $1
+         AND last_activity_at >= CURRENT_DATE
+         AND last_activity_at < CURRENT_DATE + INTERVAL '1 day') AS total_today_conversations,
+        (SELECT COUNT(*)
+         FROM conversations
+         WHERE account_id = $1
+         AND last_activity_at >= NOW() - INTERVAL '1 hour') AS total_last_hour_conversations`, [accountId]);
+
+    // TOTAL DE contact_id DE HOJE
+    const result11 = await client.query(`SELECT 
+          COUNT(DISTINCT contact_id) AS total_distinct_contacts_today
+        FROM conversations
+        WHERE account_id = $1
+        AND last_activity_at >= CURRENT_DATE
+        AND last_activity_at < CURRENT_DATE + INTERVAL '1 day'`, [accountId]);
+              
 
     // Estrutura os resultados
     const data = {
@@ -176,6 +196,8 @@ app.get('/fetch-data', async (req, res) => {
       tabela7: result7.rows,
       tabela8: result8.rows,
       tabela9: result9.rows,
+      tabela10: result10.rows,
+      tabela11: result11.rows,
     };
 
     // Retorna os dados na resposta HTTP
