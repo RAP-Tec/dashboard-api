@@ -101,7 +101,57 @@ app.get('/fetch-data', async (req, res) => {
             AND created_at < date_trunc('month', CURRENT_DATE)) AS previous_month_messages
         FROM messages
         WHERE account_id = $1`, [accountId]);
-    
+
+    // TOTAL DE messages E messages DO MÊS ANTERIOR
+    const result7 = await client.query(`SELECT 
+          COUNT(*) AS total_today_conversations,
+            (SELECT COUNT(*) 
+            FROM conversations 
+            WHERE account_id = $1 
+            AND last_activity_at >= CURRENT_DATE 
+            AND last_activity_at < CURRENT_DATE + INTERVAL '1 day') AS total_today_conversations_with_status_1,
+            ROUND(
+                (CAST(
+                    (SELECT COUNT(*) 
+                    FROM conversations 
+                    WHERE account_id = $1 
+                    AND last_activity_at >= CURRENT_DATE 
+                    AND last_activity_at < CURRENT_DATE + INTERVAL '1 day'
+                    AND status = 1) AS NUMERIC) / 
+                CAST(
+                    COUNT(*) AS NUMERIC)
+                ) * 100, 2) AS percentage
+        FROM conversations
+        WHERE account_id = $1
+        AND last_activity_at >= CURRENT_DATE
+        AND last_activity_at < CURRENT_DATE + INTERVAL '1 day'`, [accountId]);
+
+    // TOTAL DE messages E messages DO MÊS ANTERIOR
+    const result8 = await client.query(`SELECT 
+          status,
+            CASE 
+                WHEN status = 0 THEN 'open'
+                WHEN status = 1 THEN 'resolved'
+                WHEN status = 2 THEN 'pending'
+                WHEN status = 3 THEN 'snoozed'
+                ELSE 'open'
+            END AS status_label,
+            COUNT(*) AS total_conversations,
+            ROUND(
+                (CAST(COUNT(*) AS NUMERIC) / 
+                (SELECT COUNT(*) 
+                  FROM conversations 
+                  WHERE account_id = $1 
+                  AND last_activity_at >= CURRENT_DATE 
+                  AND last_activity_at < CURRENT_DATE + INTERVAL '1 day')
+                ) * 100, 2) AS percentage
+        FROM conversations
+        WHERE account_id = $1
+        AND last_activity_at >= CURRENT_DATE
+        AND last_activity_at < CURRENT_DATE + INTERVAL '1 day'
+        GROUP BY status
+        ORDER BY status`, [accountId]);
+
     // Estrutura os resultados
     const data = {
       tabela1: result1.rows,
@@ -110,6 +160,8 @@ app.get('/fetch-data', async (req, res) => {
       tabela4: result4.rows,
       tabela5: result5.rows,
       tabela6: result6.rows,
+      tabela7: result7.rows,
+      tabela8: result8.rows,
     };
 
     // Retorna os dados na resposta HTTP
