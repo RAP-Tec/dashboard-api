@@ -1,7 +1,8 @@
 # dashboard-api
 API em TypeScript para conectar ao PostgreSQL e retornar JSON
 
-##.env##
+## .env configuração
+
 DB_USER=seu_usuario
 DB_HOST=localhost
 DB_NAME=seu_banco
