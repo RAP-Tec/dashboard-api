@@ -152,6 +152,19 @@ app.get('/fetch-data', async (req, res) => {
         GROUP BY status
         ORDER BY status`, [accountId]);
 
+    // TOTAL DE messages E messages DO MÊS ANTERIOR
+    const result9 = await client.query(`SELECT 
+          TO_CHAR(last_activity_at, 'HH24') AS hour,
+            COUNT(*) AS total_conversations
+        FROM conversations
+        WHERE account_id = $1
+        AND last_activity_at >= CURRENT_DATE
+        AND last_activity_at < CURRENT_DATE + INTERVAL '1 day'
+        AND last_activity_at >= NOW() - INTERVAL '10 hours'
+        GROUP BY TO_CHAR(last_activity_at, 'HH24')
+        ORDER BY hour ASC`, [accountId]);
+    
+
     // Estrutura os resultados
     const data = {
       tabela1: result1.rows,
@@ -162,6 +175,7 @@ app.get('/fetch-data', async (req, res) => {
       tabela6: result6.rows,
       tabela7: result7.rows,
       tabela8: result8.rows,
+      tabela9: result9.rows,
     };
 
     // Retorna os dados na resposta HTTP
