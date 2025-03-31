@@ -78,7 +78,7 @@ app.get('/fetch-data', async (req, res) => {
         FROM conversations
         WHERE account_id = $1`, [accountId]);
 
-    // TOTAL DE conversations E conversations DO DIA ANTERIOR
+    // TOTAL DE conversations DO DIA E conversations DO DIA ANTERIOR
     const result5 = await client.query(`SELECT 
           COUNT(*) AS total_today_conversations,
             (SELECT COUNT(*) 
@@ -134,7 +134,7 @@ app.get('/fetch-data', async (req, res) => {
                 WHEN status = 1 THEN 'resolved'
                 WHEN status = 2 THEN 'pending'
                 WHEN status = 3 THEN 'snoozed'
-                ELSE 'open'
+                ELSE 'closed'
             END AS status_label,
             COUNT(*) AS total_conversations,
             ROUND(
